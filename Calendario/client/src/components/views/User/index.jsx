@@ -1,7 +1,8 @@
 import React, { useState } from 'react'
-import { Grid, Container, Paper, Typography, TextField, Button, CssBaseline } from '@material-ui/core'
+import { Container, Paper, Typography, TextField, Button } from '@material-ui/core'
 import axios from 'axios'
 import { useHistory } from 'react-router'
+import '../Dashboard/main.css'
 
 const User = () => {
     const [body, setBody] = useState({ user: '', username: '', password: '' })
@@ -27,8 +28,7 @@ const User = () => {
     }
 
     return (
-        <Grid container component='main'>
-            <CssBaseline />
+        <main className='home-login'>
             <Container component={Paper} elevation={5} maxWidth='xs'>
                 <div>
                     <Typography component='h1' variant='h5'>Registro</Typography>
@@ -75,7 +75,7 @@ const User = () => {
                     </form>
                 </div>
             </Container>
-        </Grid>
+        </main>
     )
 }
 

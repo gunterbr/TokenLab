@@ -1,7 +1,8 @@
 import React, { useState } from 'react'
-import { Grid, Container, Paper, Typography, TextField, Button, CssBaseline } from '@material-ui/core'
+import { Container, Paper, Typography, TextField, Button } from '@material-ui/core'
 import axios from 'axios'
 import { useHistory } from 'react-router'
+import '../Dashboard/main.css'
 
 const Login = () => {
     const [body, setBody] = useState({ username: '', password: '' })
@@ -19,6 +20,7 @@ const Login = () => {
         axios.post('http://localhost:4000/api/login', body)
             .then(({ data }) => {
                 localStorage.setItem('auth', '"yes"')
+                localStorage.setItem('user', body.username)
                 push('/app')
             })
             .catch(({ response }) => {
@@ -31,8 +33,7 @@ const Login = () => {
     }
 
     return (
-        <Grid container component='main'>
-            <CssBaseline />
+        <main className='home-login'>
             <Container component={Paper} elevation={5} maxWidth='xs'>
                 <div>
                     <Typography component='h1' variant='h5'>Log-in</Typography>
@@ -76,7 +77,7 @@ const Login = () => {
                     </form>
                 </div>
             </Container>
-        </Grid>
+        </main>
     )
 }
 

@@ -6,10 +6,9 @@ const app = express()
 app.use(cors())
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json({ limit: '10mb' }))
-// const JWT = require('jsonwebtoken')
-// const secretWord = 'Samus#Aran'
 
 const dbName = 'gunterbr';
+
 const db = mysql.createConnection({
 	host: "localhost",
 	user: "root",
@@ -26,6 +25,7 @@ const sqlUsers = `CREATE TABLE IF NOT EXISTS ${dbName}.login(
 );`;
 const sqlEvents = `CREATE TABLE IF NOT EXISTS ${dbName}.events(
   id int NOT NULL AUTO_INCREMENT UNIQUE,
+  username varchar(150) NOT NULL,
   backgroundColor varchar(20) NOT NULL UNIQUE,
   title varchar(150) NOT NULL UNIQUE,
   start varchar(150) NOT NULL,
@@ -49,21 +49,8 @@ db.query(sqlDB, (error) => {
 
 });
 
-function getRandomColor() {
-    var letters = '0123456789ABCDEF';
-    var color = '#';
-    for (var i = 0; i < 6; i++) {
-      color += letters[Math.floor(Math.random() * 16)];
-    }
-    return color;
-};
-
-app.get('/', (req, res) => {
-	res.send('router API')
-});
-
 //USUÁRIOS
-app.post('/api/login', (req, res) => {
+app.get('/api/login', (req, res) => {
 	const { username, password } = req.body;
 	
 	let mysql = `SELECT * FROM ${dbName}.login WHERE username = ? AND password = ?`;
@@ -78,7 +65,7 @@ app.post('/api/login', (req, res) => {
 					"username": result[0].username
 				})
 			} else {
-				res.status(400).send('Usuario no existe')
+				res.status(400).send('Usuário ou senha incorretos');
 			}
 		}
 	});
@@ -86,6 +73,10 @@ app.post('/api/login', (req, res) => {
 
 app.post('/api/newuser', (req, res) => {
 	const { user, username, password } = req.body;
+
+	if(!user && !username && !password) {
+		res.status(400).send('Preencha todos os campos')
+	} else {
 	
 	let mysql = `INSERT INTO ${dbName}.login (user, username, password) VALUES (?, ?, ?)`;
 	db.query(mysql, [user, username, password], (err, result) => {
@@ -103,49 +94,45 @@ app.post('/api/newuser', (req, res) => {
 			}
 		}
 	});
+	}
 });
 
 //EVENTOS
 app.post("/register", (req, res) => {
-	const { title } = req.body;
-	const { start } = req.body;
-	const { end }   = req.body;
+	const { username, title, start, end, backgroundColor } = req.body;
   
-	let mysql = `INSERT INTO ${dbName}.events (backgroundColor, title, start, end) VALUES (?, ?, ?, ?)`;
-	db.query(mysql, [getRandomColor(), title, start, end], (err, result) => {
-	  res.send(result);
+	let mysql = `INSERT INTO ${dbName}.events (username,backgroundColor, title, start, end) VALUES (?, ?, ?, ?, ?)`;
+	db.query(mysql, [username, backgroundColor, title, start, end], (err, result) => {
+		if(err) return console.log("Verifique as informações e tente novamente!")
+		res.send(result);
 	});
 });
   
-app.post("/search", (req, res) => {
-	const { title } = req.body;
-	const { start } = req.body;
-	const { end } = req.body;
-  
+app.get("/search", (req, res) => {
+	const { title, username } = req.body;
+
 	let mysql =
-	  `SELECT * FROM ${dbName}.events WHERE title = ? AND start = ? AND end = ?`;
-	db.query(mysql, [title, start, end], (err, result) => {
+	  `SELECT * FROM ${dbName}.events WHERE title = ? AND username = ?`;
+	db.query(mysql, [title, username], (err, result) => {
 	  if (err) res.send(err);
 	  res.send(result);
 	});
 });
   
-app.get("/getCards", (req, res) => {
-	let mysql = `SELECT * FROM ${dbName}.events`;
-	db.query(mysql, (err, result) => {
-	  if (err) {
-		console.log(err);
-	  } else {
-		res.send(result);
-	  }
+app.get("/getCards/:username", (req, res) => {
+	const { username } = req.params;
+
+	let mysql =
+	  `SELECT * FROM ${dbName}.events WHERE username = ?`;
+	db.query(mysql, username, (err, result) => {
+	  if (err) res.send(err);
+	  res.send(result);
 	});
 });
   
 app.put("/edit", (req, res) => {
-	const { id } = req.body;
-	const { title } = req.body;
-	const { start } = req.body;
-	const { end } = req.body;
+	const { id, title, start, end } = req.body;
+	
 	let mysql = `UPDATE ${dbName}.events SET title = ?, start = ?, end = ? WHERE id = ?`;
 	db.query(mysql, [title, start, end, id], (err, result) => {
 	  if (err) {
@@ -158,6 +145,7 @@ app.put("/edit", (req, res) => {
   
 app.delete("/delete/:id", (req, res) => {
 	const { id } = req.params;
+	
 	let mysql = `DELETE FROM ${dbName}.events WHERE id = ?`;
 	db.query(mysql, id, (err, result) => {
 	  if (err) {

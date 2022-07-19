@@ -28,9 +28,9 @@ export default function FormDialog(props) {
   };
 
   const handleEdit = () => {
-    Axios.put("http://localhost:3001/edit", {
+    Axios.put("http://localhost:4000/edit", {
       id: editValues.id,
-      backgroundColor: props.backgroundColor,
+      backgroundColor: editValues.bgColor,
       title: editValues.name,
       start: editValues.start,
       end: editValues.end,
@@ -40,7 +40,7 @@ export default function FormDialog(props) {
           return value.id === editValues.id
             ? {
                 id: editValues.id,
-                backgroundColor: props.backgroundColor,
+                backgroundColor: editValues.bgColor,
                 title: editValues.name,
                 start: editValues.start,
                 end: editValues.end,
@@ -53,7 +53,7 @@ export default function FormDialog(props) {
   };
 
   const handleDelete = () => {
-    Axios.delete(`http://localhost:3001/delete/${editValues.id}`).then(() => {
+    Axios.delete(`http://localhost:4000/delete/${editValues.id}`).then(() => {
       props.setListCard(
         props.listCard.filter((value) => {
           return value.id !== editValues.id;

@@ -1,55 +1,62 @@
-import React, { Fragment, useEffect, useState } from "react"
-import Axios from "axios"
+import React, { Fragment, useEffect, useState } from 'react'
+import Axios from 'axios'
 import FullCalendar from '@fullcalendar/react'
 import dayGridPlugin from '@fullcalendar/daygrid'
-import interactionPlugin from '@fullcalendar/interaction'
 import bootstrap5Plugin from '@fullcalendar/bootstrap5'
 import timeGridPlugin from '@fullcalendar/timegrid'
 import listPlugin from '@fullcalendar/list'
-import Card from "./cards/cards"
+import Card from './cards/cards'
 
 import 'bootstrap/dist/css/bootstrap.css'
 import 'bootstrap-icons/font/bootstrap-icons.css'
 import './main.css'
 
 const Dashboard = () => {
-
+  const userNow = localStorage.getItem('user');
   const [values, setValues] = useState();
   const [listCard, setListCard] = useState([]);
+
   console.log(listCard);
 
-  const handleRegister = () => {
+  function randomColor() {
+    const newColor = "#"+Math.floor(Math.random()*16777215).toString(16);
+    return newColor;
+  };
+
+  const handleRegister = (e) => {
+    e.preventDefault();
     Axios.post("http://localhost:4000/register", {
+      username: userNow,
+      backgroundColor: randomColor(),
       title: values.title,
       start: values.start,
       end: values.end,
     }).then(() => {
       Axios.post("http://localhost:4000/search", {
-        backgroundColor: values.backgroundColor,
+        username: userNow,
         title: values.title,
-        start: values.start,
-        end: values.end,
       }).then((response) => {
         setListCard([
           ...listCard,
           {
             id: response.data[0].id,
-            backgroundColor: values.backgroundColor,
-            title: values.title,
-            start: values.start,
-            end: values.end,
+            username: response.data[0].username,
+            backgroundColor: response.data[0].backgroundColor,
+            title: response.data[0].title,
+            start: response.data[0].start,
+            end: response.data[0].end,
           },
         ]);
       });
     });
   };
 
-  //carrega os eventos do DB
+  //carrega os eventos
   useEffect(() => {
-    Axios.get("http://localhost:4000/getCards").then((response) => {
+    Axios.get(`http://localhost:4000/getCards/${userNow}`).then((response) => {
       setListCard(response.data);
     });
-  }, []);
+  }, [userNow]);
 
   //captura os valores digitados para inserir no DB
   const handleaddValues = (value) => {
@@ -63,8 +70,9 @@ const Dashboard = () => {
     <Fragment>
 
     <div className="container p-5">
-
       <div className="input-group">
+      <form className="newEvent">
+
         <input
           type="text"
           className="form-control register-input"
@@ -73,6 +81,7 @@ const Dashboard = () => {
           name="title"
           placeholder="Evento"
           onChange={handleaddValues}
+          required
         />
         <input
           type="datetime-local"
@@ -82,6 +91,7 @@ const Dashboard = () => {
           placeholder="início"
           name="start"
           onChange={handleaddValues}
+          required
         />
         <input
           type="datetime-local"
@@ -93,13 +103,15 @@ const Dashboard = () => {
           onChange={handleaddValues}
         />
 
-        <button onClick={handleRegister} className="btn btn-primary register-button">
+        <button type="submit" onClick={handleRegister} className="btn btn-primary register-button">
           Cadastrar
         </button>
+
+        </form>
       </div>
 
             <FullCalendar
-                    plugins={[ dayGridPlugin, interactionPlugin, bootstrap5Plugin, timeGridPlugin, listPlugin ]}
+                    plugins={[ dayGridPlugin, bootstrap5Plugin, timeGridPlugin, listPlugin ]}
                     themeSystem='bootstrap5'
                     initialView='dayGridMonth'
                     locale='pt-br'
@@ -115,8 +127,9 @@ const Dashboard = () => {
                       console.log(date);
                     }}
                    
-                    events='http://localhost:4000/getCards'
-
+                    events= {{
+                      url:`http://localhost:4000/getCards/${userNow}`,
+                    }}
                   />
       <span>Editar Eventos:</span>
       {listCard.map((val) => (
@@ -125,6 +138,7 @@ const Dashboard = () => {
           setListCard={setListCard}
           key={val.id}
           id={val.id}
+          userDefault={val.username}
           bgColor={val.backgroundColor}
           name={val.title}
           start={val.start}

@@ -11,6 +11,7 @@ export default function Card(props) {
         open={open}
         setOpen={setOpen}
         title={props.name}
+        username={props.userDefault}
         backgroundColor={props.bgColor}
         end={props.end}
         start={props.start}
